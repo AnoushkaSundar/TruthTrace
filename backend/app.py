@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import base64
 import random
@@ -6,10 +7,11 @@ import time
 import logging
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from groq import Groq
 from dotenv import load_dotenv
+
+# Ensure backend/ is in sys.path so prompt.py is always importable
+sys.path.insert(0, os.path.dirname(__file__))
 from prompt import TRUTHTRACE_SYSTEM_PROMPT
 
 # Path to the frontend folder (sibling of backend/)
@@ -23,14 +25,27 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-limiter = Limiter(
-    key_func=get_remote_address,
-    app=app,
-    default_limits=["30 per minute"],
-    storage_uri="memory://"
-)
+# Rate limiter — graceful no-op on serverless where memory state is per-invocation
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    limiter = Limiter(
+        key_func=get_remote_address,
+        app=app,
+        default_limits=["30 per minute"],
+        storage_uri="memory://"
+    )
+except Exception:
+    class _NoopLimiter:
+        def limit(self, *a, **kw):
+            return lambda f: f
+    limiter = _NoopLimiter()
 
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    logger.error("GROQ_API_KEY environment variable is not set.")
+
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_VISION_MODEL = os.environ.get("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
 MAX_RETRIES = 2
@@ -39,7 +54,8 @@ MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10 MB
 
 
 def call_groq_with_retry(claim: str, max_retries: int = MAX_RETRIES):
-    """Call Groq API with automatic retry on failure."""
+    if not groq_client:
+        raise RuntimeError("GROQ_API_KEY is not configured on this server.")
     last_error = None
     for attempt in range(max_retries + 1):
         try:
@@ -179,6 +195,9 @@ def investigate_image():
     content_type = (file.content_type or "").split(";")[0].strip()
     if content_type not in ALLOWED_IMAGE_TYPES:
         return jsonify({"error": "Unsupported file type. Please upload JPEG, PNG, GIF, or WebP."}), 400
+
+    if not groq_client:
+        return jsonify({"error": "GROQ_API_KEY is not configured on this server."}), 503
 
     image_data = file.read()
     if len(image_data) > MAX_IMAGE_BYTES:
