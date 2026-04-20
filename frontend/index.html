@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TruthTrace — AI-powered forensic investigation tool that detects misinformation, fake evidence, and manipulated claims in real time." />
+  <meta name="theme-color" content="#0a0e1a" />
+  <title>TruthTrace — AI Evidence Investigator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="17" cy="17" r="10" stroke="url(#grad1)" stroke-width="2.5"/>
+            <line x1="24" y1="24" x2="35" y2="35" stroke="url(#grad1)" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="17" cy="17" r="5" fill="url(#grad1)" opacity="0.3"/>
+            <defs>
+              <linearGradient id="grad1" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#00d4ff"/>
+                <stop offset="100%" stop-color="#7c3aed"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">TruthTrace</span>
+          <span class="brand-tagline">AI Evidence Investigator</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-history" id="toggleHistory" aria-label="Toggle history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>History</span>
+          <span class="history-badge" id="historyBadge" style="display:none">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════ MAIN ════════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- ─── HISTORY SIDEBAR ─── -->
+    <aside class="history-sidebar" id="historySidebar" aria-hidden="true">
+      <div class="sidebar-header">
+        <h2>Investigation History</h2>
+        <button class="btn-close-sidebar" id="closeSidebar" aria-label="Close history">✕</button>
+      </div>
+      <div class="sidebar-list" id="historyList">
+        <div class="history-empty">No investigations yet. Submit a claim to begin.</div>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ─── INPUT SCREEN ─── -->
+    <section class="screen" id="inputScreen">
+      <div class="hero">
+        <div class="hero-badge">
+          <span class="pulse-dot"></span>
+          LIVE — Powered by LLaMA 3 via Groq
+        </div>
+        <h1 class="hero-title">
+          Investigate Any <span class="gradient-text">Claim.</span><br/>
+          Expose the Truth.
+        </h1>
+        <p class="hero-subtitle">
+          Paste a news snippet, WhatsApp forward, viral claim, or social media post. TruthTrace's AI forensic pipeline
+          will decompose, interrogate, and deliver a verdict — in seconds.
+        </p>
+      </div>
+
+      <div class="input-card glass-card">
+
+        <!-- Tab switcher -->
+        <div class="input-tabs" role="tablist">
+          <button class="tab-btn active" id="tabText" role="tab" aria-selected="true" aria-controls="panelText">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Text / Claim
+          </button>
+          <button class="tab-btn" id="tabImage" role="tab" aria-selected="false" aria-controls="panelImage">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Image / Screenshot
+          </button>
+        </div>
+
+        <!-- TEXT PANEL -->
+        <div id="panelText" role="tabpanel">
+          <label for="claimInput" class="input-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Enter Claim to Investigate
+          </label>
+          <div class="textarea-wrapper">
+            <textarea
+              id="claimInput"
+              class="claim-textarea"
+              placeholder="Paste a claim, news headline, WhatsApp forward, or social media post here..."
+              maxlength="2000"
+              rows="5"
+              aria-describedby="charCounter inputError"
+            ></textarea>
+            <div class="char-counter" id="charCounter">
+              <span id="charCount">0</span> / 2000
+            </div>
+          </div>
+          <div class="input-error" id="inputError" role="alert" aria-live="polite"></div>
+
+          <div class="demo-section">
+            <span class="demo-label">Try a demo:</span>
+            <div class="demo-buttons">
+              <button class="btn-demo btn-demo-true" id="demoTrue" data-claim="The Eiffel Tower is in Paris and was completed in 1889. It was designed by engineer Gustave Eiffel and stands 330 metres tall.">
+                <span class="demo-dot green"></span> TRUE claim
+              </button>
+              <button class="btn-demo btn-demo-mislead" id="demoMislead" data-claim="Scientists say drinking warm lemon water every morning cures all digestive diseases permanently. Doctors are hiding this simple cure from the public to sell expensive medicines.">
+                <span class="demo-dot amber"></span> MISLEADING claim
+              </button>
+              <button class="btn-demo btn-demo-false" id="demoFalse" data-claim="The government has secretly added microchips to COVID vaccines to track citizens in real time. The 5G network is used to activate these chips to monitor your every movement and thought.">
+                <span class="demo-dot red"></span> FALSE claim
+              </button>
+              <button class="btn-demo btn-demo-social" id="demoSocial" data-claim="🚨 BREAKING 🚨 Scientists have CONFIRMED that a new study PROVES phones cause brain tumours — mainstream media is HIDING this!! SHARE before this gets DELETED!! Doctors won't tell you this. Big Pharma doesn't want you to know. RT NOW ‼️ #WakeUp #Truth #HiddenAgenda">
+                <span class="demo-dot blue"></span> Social media post
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMAGE PANEL -->
+        <div id="panelImage" class="hidden" role="tabpanel">
+          <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" aria-label="Upload image" />
+
+          <div class="upload-zone" id="uploadZone" tabindex="0" role="button" aria-label="Upload image — click or drag and drop">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <p class="upload-title">Drop your screenshot here</p>
+            <p class="upload-subtitle">or <span class="upload-link">click to browse</span></p>
+            <p class="upload-hint">JPEG · PNG · GIF · WebP — max 10 MB</p>
+          </div>
+
+          <div class="image-preview-wrapper" id="imagePreview" style="display:none">
+            <img class="image-preview-img" id="previewImg" alt="Uploaded screenshot" />
+            <button class="btn-clear-image" id="clearImageBtn" type="button">✕ Remove image</button>
+          </div>
+
+          <div class="input-error" id="imageError" role="alert" aria-live="polite"></div>
+        </div>
+
+        <!-- Shared submit row -->
+        <div class="submit-row">
+          <button class="btn-investigate" id="investigateBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <span class="btn-label">Investigate Claim</span>
+          </button>
+        </div>
+
+        <div class="disclaimer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          TruthTrace generates AI-powered analysis — not verified fact. Always cross-reference important claims with trusted sources.
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── LOADING SCREEN ─── -->
+    <section class="screen hidden" id="loadingScreen" aria-live="polite">
+      <div class="loading-container">
+        <div class="loading-icon-wrapper">
+          <div class="loading-ring ring-1"></div>
+          <div class="loading-ring ring-2"></div>
+          <div class="loading-ring ring-3"></div>
+          <div class="loading-icon-core">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="21" cy="21" r="12" stroke="url(#lg)" stroke-width="3"/>
+              <line x1="30" y1="30" x2="42" y2="42" stroke="url(#lg)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="21" cy="21" r="6" fill="url(#lg)" opacity="0.4"/>
+              <defs>
+                <linearGradient id="lg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#00d4ff"/>
+                  <stop offset="100%" stop-color="#7c3aed"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+        <h2 class="loading-title">Investigating...</h2>
+        <p class="loading-message" id="loadingMessage">Initializing forensic analysis...</p>
+        <div class="loading-progress">
+          <div class="loading-progress-bar" id="loadingProgressBar"></div>
+        </div>
+        <div class="loading-steps" id="loadingSteps">
+          <div class="loading-step active" id="step1">
+            <span class="step-dot"></span> Decomposing claim
+          </div>
+          <div class="loading-step" id="step2">
+            <span class="step-dot"></span> Scanning for fallacies
+          </div>
+          <div class="loading-step" id="step3">
+            <span class="step-dot"></span> Analysing manipulation patterns
+          </div>
+          <div class="loading-step" id="step4">
+            <span class="step-dot"></span> Preparing verdict
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── VERDICT SCREEN ─── -->
+    <section class="screen hidden" id="verdictScreen">
+
+      <div class="verdict-topbar">
+        <button class="btn-back" id="backBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          New Investigation
+        </button>
+        <div class="case-id" id="caseId">TT-0000</div>
+      </div>
+
+      <!-- ONE-LINE SUMMARY -->
+      <div class="verdict-summary-banner glass-card" id="summaryBanner">
+        <div class="verdict-badge-wrapper">
+          <div class="verdict-badge" id="verdictBadge">
+            <span class="verdict-icon" id="verdictIcon"></span>
+            <span class="verdict-label" id="verdictLabel">VERDICT</span>
+          </div>
+        </div>
+        <p class="verdict-summary-text" id="summaryText">Loading...</p>
+      </div>
+
+      <!-- METRICS ROW -->
+      <div class="metrics-row">
+        <div class="metric-card glass-card">
+          <div class="metric-label">Confidence</div>
+          <div class="confidence-bar-wrapper">
+            <div class="confidence-bar-track">
+              <div class="confidence-bar-fill" id="confidenceBar"></div>
+            </div>
+            <span class="confidence-pct" id="confidencePct">0%</span>
+          </div>
+        </div>
+        <div class="metric-card glass-card">
+          <div class="metric-label">Danger Level</div>
+          <div class="danger-chip" id="dangerChip">MEDIUM</div>
+        </div>
+        <div class="metric-card glass-card">
+          <div class="metric-label">Manipulation Score</div>
+          <div class="manip-gauge-wrapper">
+            <div class="manip-gauge-track">
+              <div class="manip-gauge-fill" id="manipGauge"></div>
+            </div>
+            <span class="manip-score" id="manipScore">0 / 10</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECOMMENDATION -->
+      <div class="recommendation-card glass-card" id="recommendationCard">
+        <div class="rec-icon" id="recIcon"></div>
+        <div class="rec-content">
+          <div class="rec-label">Recommendation</div>
+          <div class="rec-text" id="recText">Verify before sharing</div>
+        </div>
+      </div>
+
+      <!-- SOCIAL MEDIA SIGNALS -->
+      <div class="section-card glass-card" id="socialMediaSection" style="display:none">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          <h2 class="section-title">Social Media Signals</h2>
+        </div>
+        <div class="social-meta-row">
+          <div class="social-meta-item">
+            <span class="social-meta-label">Platform</span>
+            <span class="social-meta-value" id="smPlatform">Unknown</span>
+          </div>
+          <div class="social-meta-item">
+            <span class="social-meta-label">Engagement Bait</span>
+            <span class="social-meta-value" id="smEngagementBait">—</span>
+          </div>
+        </div>
+        <div class="social-tactics" id="smTacticsWrap" style="display:none">
+          <div class="social-tactics-label">Virality Tactics Detected</div>
+          <div class="social-tactics-list" id="smTacticsList"></div>
+        </div>
+        <div class="social-credibility" id="smCredibilityWrap" style="display:none">
+          <div class="social-credibility-label">Source Credibility</div>
+          <p class="social-credibility-text" id="smCredibilityText"></p>
+        </div>
+      </div>
+
+      <!-- RED FLAGS -->
+      <div class="section-card glass-card" id="redFlagsSection">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M3 21l18-18"/></svg>
+          <h2 class="section-title">Red Flags</h2>
+        </div>
+        <div class="red-flags-list" id="redFlagsList"></div>
+      </div>
+
+      <!-- LOGICAL FALLACIES -->
+      <div class="section-card glass-card" id="fallaciesSection">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <h2 class="section-title">Logical Fallacies Detected</h2>
+        </div>
+        <div class="fallacies-grid" id="fallaciesGrid"></div>
+      </div>
+
+      <!-- EVIDENCE PANEL -->
+      <div class="section-card glass-card">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <h2 class="section-title">Evidence Analysis</h2>
+        </div>
+        <div class="evidence-columns">
+          <div class="evidence-col supporting">
+            <div class="evidence-col-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+              Supporting
+            </div>
+            <ul class="evidence-list" id="evidenceSupporting"></ul>
+          </div>
+          <div class="evidence-col contradicting">
+            <div class="evidence-col-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Contradicting
+            </div>
+            <ul class="evidence-list" id="evidenceContradicting"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- DECOMPOSITION (COLLAPSIBLE) -->
+      <div class="section-card glass-card collapsible-card" id="decompSection">
+        <button class="collapsible-header" id="decompToggle" aria-expanded="false" aria-controls="decompBody">
+          <div class="section-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h8m-8 6h16"/></svg>
+            <h2 class="section-title">Claim Decomposition</h2>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collapsible-body" id="decompBody">
+          <div class="decomp-grid" id="decompGrid"></div>
+        </div>
+      </div>
+
+      <!-- MOTIVE ANALYSIS -->
+      <div class="section-card glass-card">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+          <h2 class="section-title">Motive Analysis</h2>
+        </div>
+        <p class="motive-text" id="motiveText"></p>
+      </div>
+
+      <!-- REASONING (COLLAPSIBLE) -->
+      <div class="section-card glass-card collapsible-card">
+        <button class="collapsible-header" id="reasoningToggle" aria-expanded="false" aria-controls="reasoningBody">
+          <div class="section-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <h2 class="section-title">Full Reasoning</h2>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collapsible-body" id="reasoningBody">
+          <p class="reasoning-text" id="reasoningText"></p>
+        </div>
+      </div>
+
+      <!-- INVESTIGATOR'S NOTE -->
+      <div class="investigators-note" id="investigatorsNote">
+        <div class="note-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+          Investigator's Note
+        </div>
+        <blockquote class="note-text" id="noteText"></blockquote>
+      </div>
+
+      <div class="disclaimer verdict-disclaimer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        This report is AI-generated analysis for informational purposes only — not verified fact. Always cross-reference with trusted sources before sharing.
+      </div>
+
+    </section>
+
+    <!-- ─── ERROR SCREEN ─── -->
+    <section class="screen hidden" id="errorScreen" role="alert" aria-live="assertive">
+      <div class="error-container">
+        <div class="error-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h2 class="error-title">Investigation Failed</h2>
+        <p class="error-message" id="errorMessage">Something went wrong. Please try again.</p>
+        <div class="error-actions">
+          <button class="btn-investigate" id="retryBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            Retry Investigation
+          </button>
+          <button class="btn-back" id="errorBackBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Back
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
